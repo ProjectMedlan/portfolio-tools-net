@@ -1,4 +1,4 @@
-# Portolio Performance Tools
+# Portfolio Performance Tools
 .NET Tools for Portfolio Performance
 
 ## Install Instructions
