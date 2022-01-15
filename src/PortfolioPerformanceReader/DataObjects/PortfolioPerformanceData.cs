@@ -8,12 +8,6 @@ namespace PortfolioPerformanceReader.DataObjects
 {
     public class PortfolioPerformanceData
     {
-        public List<Security> Securities { get; set; }
-
-        public PortfolioPerformanceData()
-        {
-            // Init default values & lists
-            Securities = new List<Security>();
-        }
+        public List<Security> Securities { get; set; } = new List<Security>();
     }
 }
