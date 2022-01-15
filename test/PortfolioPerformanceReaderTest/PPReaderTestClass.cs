@@ -23,5 +23,15 @@ namespace PortfolioPerformanceReaderTests
             Assert.Null(exception);
         }
 
+        [Theory]
+        [InlineData(localPPFile)]
+        public async void FileContainsSecurities(string file)
+        {
+            PortfolioPerformanceReader.DataObjects.PortfolioPerformanceData? data = await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
+            Assert.NotNull(data);
+            Assert.NotNull(data.Securities);
+            Assert.NotEmpty(data.Securities);
+        }
+
     }
 }
