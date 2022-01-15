@@ -10,7 +10,15 @@ namespace PortfolioPerformanceReader
     {
         public static event Action<string> AddLogMessage;
 
+        private static readonly IFormatProvider DATE_FORMAT = new DateTimeFormat("yyyy-MM-dd").FormatProvider;
+        private static readonly IFormatProvider TIMESTAMP_FORMAT = new DateTimeFormat("g").FormatProvider;
+
         public async static Task<PortfolioPerformanceData> ReadPortfolioPerformanceFile(string portfolioFile)
+        {
+            return await ReadPortfolioPerformanceFile(portfolioFile, new PortfolioPerformanceDataReaderOptions());
+        }
+
+        public async static Task<PortfolioPerformanceData> ReadPortfolioPerformanceFile(string portfolioFile, PortfolioPerformanceDataReaderOptions options)
         {
             PortfolioPerformanceData data = new PortfolioPerformanceData();
 
@@ -19,11 +27,18 @@ namespace PortfolioPerformanceReader
             XmlParser parser = new XmlParser();
             IXmlDocument doc = await parser.ParseDocumentAsync(File.ReadAllText(portfolioFile));
 
-            // Die bestehenden Aktien auslesen
+            // Read all the data
+            IElement rootElement = doc.QuerySelector("client");
+
+            Int32.TryParse(rootElement.QuerySelector("version").InnerHtml, out int fileVersion);
+            data.Version = fileVersion;
+            data.BaseCurrency = rootElement.QuerySelector("baseCurrency").InnerHtml;
+
+            // Read all the securities and their data
             int itemNumber = 1;
             foreach (IElement item in doc.QuerySelectorAll("security"))
             {
-                // Keine Ahnung woher das kam ....
+                // Honestly I don't know anymore why there are some without children
                 if (item.Children.Count() == 0)
                 {
                     continue;
@@ -32,23 +47,93 @@ namespace PortfolioPerformanceReader
                 AddLogMessage?.Invoke($"Aktie {itemNumber}");
 
                 Security security = new Security();
-                // security.ShareListWithDate = new List<Tuple<DateTime, long>>();
-                // security.ShareDetails = new List<Share>();
                 security.ID = itemNumber++;
                 security.Uuid = item.QuerySelector("uuid").InnerHtml;
                 security.Name = item.QuerySelector("name").InnerHtml.Replace("&amp;", "&");
-                if (item.QuerySelector("latest")?.GetAttribute("t") != null)
+                security.CurrencyCode = item.QuerySelector("currencyCode").InnerHtml;
+                security.Note = item.QuerySelector("note")?.InnerHtml;
+
+                IElement latestElement = item.QuerySelector("latest");
+                if (latestElement != null)
                 {
-                    security.LastUpdate = DateTime.Parse(item.QuerySelector("latest")?.GetAttribute("t"), new DateTimeFormat("yyyy-MM-dd").FormatProvider);
+                    if (latestElement.GetAttribute("t") != null)
+                    {
+                        security.LatestDate = DateOnly.Parse(latestElement.GetAttribute("t"), DATE_FORMAT);
+                    }
+                    if (latestElement.GetAttribute("v") != null)
+                    {
+                        security.LatestValue = Convert.ToInt64(latestElement.GetAttribute("v"));
+                    }
+                    security.LatestHigh = Convert.ToInt64(latestElement.QuerySelector("high")?.InnerHtml);
+                    security.LatestLow = Convert.ToInt64(latestElement.QuerySelector("low")?.InnerHtml);
+                    security.LatestVolume = Convert.ToInt64(latestElement.QuerySelector("volume")?.InnerHtml);
                 }
-                if (item.QuerySelector("latest")?.GetAttribute("v") != null)
-                {
-                    security.LastValue = Convert.ToInt64(item.QuerySelector("latest")?.GetAttribute("v"));
-                }
+
                 security.ISIN = item.QuerySelector("isin")?.InnerHtml;
                 security.WKN = item.QuerySelector("wkn")?.InnerHtml;
                 security.TickerSymbol = item.QuerySelector("tickerSymbol")?.InnerHtml;
                 security.Feed = item.QuerySelector("feed")?.InnerHtml;
+                security.UpdatedAt = DateTime.Parse(item.QuerySelector("updatedAt").InnerHtml, TIMESTAMP_FORMAT);
+                security.IsRetired = Convert.ToBoolean(item.QuerySelector("isRetired")?.InnerHtml);
+
+                if (options.WithSecurityPriceHistory)
+                {
+                    // Only init, when option 'with Prices' selected
+                    security.Prices = new List<Price>();
+                    foreach (IElement priceItem in item.QuerySelector("prices").QuerySelectorAll("price"))
+                    {
+                        Price price = new Price();
+                        if (priceItem.GetAttribute("t") != null)
+                        {
+                            price.Date = DateOnly.Parse(priceItem.GetAttribute("t"), DATE_FORMAT);
+                        }
+                        if (priceItem.GetAttribute("v") != null)
+                        {
+                            price.Value = Convert.ToInt64(priceItem.GetAttribute("v"));
+                        }
+                    }
+                }
+
+                if (options.WithAttributes)
+                {
+                    // Only init, when option 'with Attributes' selected
+                    security.Attributes = new SecurityAttributes();
+
+                    foreach (IElement entryItem in item.QuerySelector("attributes").QuerySelector("map").QuerySelectorAll("entry"))
+                    {
+                        // Entry hast two childs: Descriptions & Value
+                        if (entryItem.Children.Count() == 2)
+                        {
+                            switch (entryItem.Children[0].InnerHtml?.ToLower())
+                            {
+                                case "vendor":
+                                    security.Attributes.Vendor = entryItem.Children[1].InnerHtml;
+                                    break;
+                                case "aum":
+                                    security.Attributes.AssetsUnderManagement = Convert.ToInt64(entryItem.Children[1].InnerHtml);
+                                    break;
+                                case "logo":
+                                    // Starts with: data:image/png;base64 ?
+                                    string logoidentifier = "data:image/png;base64,";
+                                    string logo = entryItem.Children[1].InnerHtml;
+                                    if (logo.StartsWith(logoidentifier))
+                                    {
+                                        security.Attributes.Base64Logo = logo.Substring(logoidentifier.Length);
+                                    }
+                                    break;
+                                case "ter":
+                                    security.Attributes.TotalExpenseRatio = Convert.ToDecimal(entryItem.Children[1].InnerHtml);
+                                    break;
+                                case "managementfee":
+                                    security.Attributes.ManagementFee = Convert.ToDecimal(entryItem.Children[1].InnerHtml);
+                                    break;
+                                case "acquisitionfee":
+                                    security.Attributes.AcquisitionFee = Convert.ToDecimal(entryItem.Children[1].InnerHtml);
+                                    break;
+                            }
+                        }
+                    }
+                }
 
                 AddLogMessage?.Invoke($"Aktie {itemNumber}; ISIN {security.ISIN}; WKN {security.WKN}");
 
@@ -58,11 +143,11 @@ namespace PortfolioPerformanceReader
             AddLogMessage?.Invoke($"Alle Aktien gelesen - Anzahl: {data.Securities.Count}");
 
 
-            
-
-
-
             /*
+
+                // security.ShareListWithDate = new List<Tuple<DateTime, long>>();
+                // security.ShareDetails = new List<Share>();
+
             List<StockItem> allStockItems = new List<StockItem>();
 
             // Die Käufe zuordnen
