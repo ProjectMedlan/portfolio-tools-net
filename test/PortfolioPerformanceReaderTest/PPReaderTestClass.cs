@@ -5,7 +5,7 @@ namespace PortfolioPerformanceReaderTests
 {
     public class PPReaderTestClass
     {
-        const string localPPFile = @"";
+        const string localPPFile = @"D:\Daten\Dokumente\Banken & Finanzen\Portfolio Performance\medlan_alles.xml";
 
         [Theory]
         [InlineData(localPPFile)]
@@ -27,7 +27,7 @@ namespace PortfolioPerformanceReaderTests
         [InlineData(localPPFile)]
         public async void FileContainsSecurities(string file)
         {
-            PortfolioPerformanceReader.DataObjects.PortfolioPerformanceData? data = await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
+            PortfolioPerformance.DataObjects.PortfolioPerformanceData? data = await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
             Assert.NotNull(data);
             Assert.NotNull(data.Securities);
             Assert.NotEmpty(data.Securities);

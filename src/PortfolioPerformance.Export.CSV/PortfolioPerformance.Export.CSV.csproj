@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp.Xml" Version="0.16.0" />
+    <ProjectReference Include="..\PortfolioPerformance.DataObjects\PortfolioPerformance.DataObjects.csproj" />
   </ItemGroup>
 
 </Project>

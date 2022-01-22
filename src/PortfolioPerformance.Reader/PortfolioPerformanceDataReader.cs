@@ -1,7 +1,7 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Xml.Dom;
 using AngleSharp.Xml.Parser;
-using PortfolioPerformanceReader.DataObjects;
+using PortfolioPerformance.DataObjects;
 using System.Runtime.Serialization;
 
 namespace PortfolioPerformanceReader
