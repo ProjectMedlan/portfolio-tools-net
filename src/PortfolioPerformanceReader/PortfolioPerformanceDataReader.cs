@@ -13,6 +13,9 @@ namespace PortfolioPerformanceReader
         private static readonly IFormatProvider DATE_FORMAT = new DateTimeFormat("yyyy-MM-dd").FormatProvider;
         private static readonly IFormatProvider TIMESTAMP_FORMAT = new DateTimeFormat("g").FormatProvider;
 
+        private const string TRANSACTION_TYPE_DELIVERY_OUTBOUND = "DELIVERY_OUTBOUND";
+
+
         public async static Task<PortfolioPerformanceData> ReadPortfolioPerformanceFile(string portfolioFile)
         {
             return await ReadPortfolioPerformanceFile(portfolioFile, new PortfolioPerformanceDataReaderOptions());
@@ -52,7 +55,6 @@ namespace PortfolioPerformanceReader
                 security.Name = item.QuerySelector("name").InnerHtml.Replace("&amp;", "&");
                 security.CurrencyCode = item.QuerySelector("currencyCode").InnerHtml;
                 security.Note = item.QuerySelector("note")?.InnerHtml;
-
                 IElement latestElement = item.QuerySelector("latest");
                 if (latestElement != null)
                 {
@@ -142,15 +144,17 @@ namespace PortfolioPerformanceReader
 
             AddLogMessage?.Invoke($"Alle Aktien gelesen - Anzahl: {data.Securities.Count}");
 
-
+            // TODO: Read watchlists? Tag: <watchlists>
             /*
+            foreach (IElement item in doc.QuerySelectorAll(""))
+            {
+            }
+            */
 
-                // security.ShareListWithDate = new List<Tuple<DateTime, long>>();
-                // security.ShareDetails = new List<Share>();
+            // TODO: Read Accounts?
+            // Account Transactions: Type Dividends -> Payout
 
-            List<StockItem> allStockItems = new List<StockItem>();
-
-            // Die Käufe zuordnen
+            // Read: Security transactions
             foreach (IElement transactionItem in doc.QuerySelectorAll("portfolio-transaction"))
             {
                 string id_string = transactionItem.QuerySelector("security").GetAttribute("reference");
@@ -164,19 +168,18 @@ namespace PortfolioPerformanceReader
 
                 AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID}");
 
-                // Bei mir nicht drin - bei Sven schon
+                // Sometimes there's this crossEntry .... remove it.
                 IElement crossEntry = transactionItem.QuerySelector("crossEntry");
                 if (crossEntry != null)
                 {
                     transactionItem.RemoveChild(crossEntry);
                 }
 
-
                 long shares = Convert.ToInt64(transactionItem.QuerySelector("shares").InnerHtml);
                 AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Shares {shares}");
                 long amount = Convert.ToInt64(transactionItem.QuerySelector("amount").InnerHtml);
                 AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Shares {amount}");
-                
+
                 string dateReference = transactionItem.QuerySelector("date").InnerHtml;
                 if (string.IsNullOrEmpty(dateReference))
                 {
@@ -186,13 +189,15 @@ namespace PortfolioPerformanceReader
                 DateTime? date = null;
                 IElement parent = transactionItem;
 
-                // Da holen wir uns schnell das Depot (Transactionen, darüber sind die Portfolios mit Namen
+                // We find the portfolio name above the transaction.
                 string portfolioName = "";
                 if ((parent.ParentElement != null) && (parent.ParentElement.ParentElement != null))
                 {
                     portfolioName = parent.ParentElement.ParentElement.QuerySelector("name").InnerHtml;
                 }
 
+                // 2 Review: My currentfile does not contain '../'
+                // for each '../' set parent as parent.ParentElement
                 if (dateReference.Contains("../"))
                 {
                     while (dateReference.Contains("../"))
@@ -211,38 +216,45 @@ namespace PortfolioPerformanceReader
                     date = Convert.ToDateTime(dateReference);
                 }
 
-                // Verkauf? Dann gehen die Shares in den negativen Bereich
-                if (transactionItem.QuerySelector("type").InnerHtml == "DELIVERY_OUTBOUND")
+                // Sold? -> shares * (-1)
+                if (transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_DELIVERY_OUTBOUND)
                 {
                     AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Es ist ein Verkauf!");
                     shares *= (-1);
                     amount *= (-1);
                 }
 
-                // Aktien finden
-                StockItem s = allStockItems.Find(x => x.ID == itemID);
-                if (s != null)
+                // Find Security in List
+                Security security = data.Securities.Find(x => x.ID == itemID);
+                if (security != null)
                 {
-                    AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Aktie gefunden: {s.Name} - Shares werden angepasst");
+                    AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Aktie gefunden: {security.Name} - Shares werden angepasst");
 
                     shares = shares / 100;
 
-                    s.Shares += shares;
-                    
-                    // Das kann dann eigentlich weg
-                    s.ShareListWithDate.Add(new Tuple<DateTime, long>(date.GetValueOrDefault(DateTime.MinValue), shares));
-                    
-                    // Und durch das hier ersetzt werden
-                    s.ShareDetails.Add(new Share { Date = (date.GetValueOrDefault(DateTime.MinValue)), Shares = shares, Portfolio = portfolioName, Amount = amount });
+                    security.Shares += shares;
+
+                    if (security.ShareDetails == null)
+                        security.ShareDetails = new List<SecurityShareDetail>();
+
+                    security.ShareDetails.Add(new SecurityShareDetail { Date = (date.GetValueOrDefault(DateTime.MinValue)), Shares = shares, Portfolio = portfolioName, TotalValue = amount });
                 }
                 else
                 {
                     // Throw error
                 }
+
             }
 
-            return allStockItems;
-        }
+            // TODO: Read plans? Tag: <plans>
+            // TODO: Read taxonomies? Tag: <taxonomies>
+            // TODO: Read dashboards? Tag: <dashboards>
+            // TODO: Read properties? Tag: <properties>
+            // TODO: Read settings? Tag: <settings>
+            /*
+            foreach (IElement item in doc.QuerySelectorAll(""))
+            {
+            }
             */
 
             return data;

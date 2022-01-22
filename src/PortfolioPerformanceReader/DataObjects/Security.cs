@@ -46,6 +46,8 @@ namespace PortfolioPerformanceReader.DataObjects
         public List<Price> Prices { get; set; }
         /// <summary> Selected Attributes </summary>
         public SecurityAttributes Attributes { get; set; }
+        /// <summary>List of transaction Details</summary>
+        public List<SecurityShareDetail> ShareDetails { get; set; }
 
         // TOOD: More to read? Events?
 
