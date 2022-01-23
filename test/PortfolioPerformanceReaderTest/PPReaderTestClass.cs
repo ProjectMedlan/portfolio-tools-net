@@ -5,7 +5,7 @@ namespace PortfolioPerformanceReaderTests
 {
     public class PPReaderTestClass
     {
-        const string localPPFile = @"D:\Daten\Dokumente\Banken & Finanzen\Portfolio Performance\medlan_alles.xml";
+        const string localPPFile = @"";
 
         [Theory]
         [InlineData(localPPFile)]
