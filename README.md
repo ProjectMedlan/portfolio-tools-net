@@ -9,8 +9,11 @@ Currently nothing to install.
  * Read further information from the file (there are plenty of possibilities). Check if there's something useful. (Added some TODOs to code)
  * Check: Deserialize XML to complete object - benefits?
 
-## Finished
- * 23.01.2022: First version of csv export (with test)
- * 22.01.2022: Read the buy / sell data from the Portfolio Performance file
- * 15.01.2022: Read the securities from the Portfolio Performance file
- * 15.01.2022: Added first unit tests
+## Changelog
+ * 30.01.2022: Fixed: Total shares have not been reduced for type sell only for type delivery outbound
+ * 30.01.2022: Ádded: Setting to skip securitys with no shares when exporting to csv
+ * 23.01.2022: Added: First version of csv export (with test)
+ * 22.01.2022: Added: Read the buy / sell data from the Portfolio Performance file
+ * 15.01.2022: Added: Read the securities from the Portfolio Performance file
+ * 15.01.2022: Added: First unit tests
+
