@@ -14,6 +14,7 @@ namespace PortfolioPerformanceReader
         private static readonly IFormatProvider TIMESTAMP_FORMAT = new DateTimeFormat("g").FormatProvider;
 
         private const string TRANSACTION_TYPE_DELIVERY_OUTBOUND = "DELIVERY_OUTBOUND";
+        private const string TRANSACTION_TYPE_SELL = "SELL";
 
 
         public async static Task<PortfolioPerformanceData> ReadPortfolioPerformanceFile(string portfolioFile)
@@ -217,7 +218,7 @@ namespace PortfolioPerformanceReader
                 }
 
                 // Sold? -> shares * (-1)
-                if (transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_DELIVERY_OUTBOUND)
+                if ((transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_DELIVERY_OUTBOUND) || (transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_SELL))
                 {
                     AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Es ist ein Verkauf!");
                     shares *= (-1);

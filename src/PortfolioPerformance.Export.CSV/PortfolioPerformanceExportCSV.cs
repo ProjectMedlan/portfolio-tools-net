@@ -38,10 +38,10 @@ namespace PortfolioPerformance.Export.CSV
 
         public static void Export(PortfolioPerformanceData data, string targetFile)
         {
-            Export(data, targetFile, true, baseColumnSetup);
+            Export(data, targetFile, true, true, baseColumnSetup);
         }
 
-        public static bool Export(PortfolioPerformanceData data, string targetFile, bool addHeader = true, params CSVCOLUMNS[] columns)
+        public static bool Export(PortfolioPerformanceData data, string targetFile, bool addHeader = true, bool removeStocksWithoutShares = true, params CSVCOLUMNS[] columns)
         {
             if (data == null) return false;
             if (data.Securities == null || data.Securities.Count == 0) return false;
@@ -56,7 +56,11 @@ namespace PortfolioPerformance.Export.CSV
             // Start here: Generate CSV file
             foreach (Security security in data.Securities)
             {
-                fileContent.AppendLine(SecurityToCSVItem(security, columns));
+                // Sold everything
+                if (removeStocksWithoutShares && security.Shares == 0)
+                    continue;
+
+                fileContent.AppendLine(SecurityToCSVItem(security, removeStocksWithoutShares, columns));
             }
             File.WriteAllText(targetFile, fileContent.ToString());
             return true;
@@ -110,7 +114,7 @@ namespace PortfolioPerformance.Export.CSV
             return String.Join(";", lineParts);
         }
 
-        private static string SecurityToCSVItem(Security security, params CSVCOLUMNS[] columns)
+        private static string SecurityToCSVItem(Security security, bool removeStocksWithoutShares,  params CSVCOLUMNS[] columns)
         {
             // Security splited in more than one portfolio?
             if (security.ShareDetails != null && security.ShareDetails.Count > 0)
@@ -119,6 +123,15 @@ namespace PortfolioPerformance.Export.CSV
                 StringBuilder lines = new StringBuilder();
                 foreach (var portfolio in portfolioNames)
                 {
+
+                    // Security in multiple Portfolios, but completely sold in some portfolios?
+                    // Check if completely sold -> No export
+                    if ((removeStocksWithoutShares) && (double)(security.ShareDetails.Where(x => x.Portfolio.Equals(portfolio)).Sum(x => x.Shares) / 1000.0 / 1000.0) == 0)
+                    {
+                        continue;
+                    }
+
+                    // Add linebreak
                     if (lines.Length > 0)
                     {
                         lines.AppendLine("");
