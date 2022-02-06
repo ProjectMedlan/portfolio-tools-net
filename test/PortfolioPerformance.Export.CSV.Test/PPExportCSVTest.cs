@@ -33,8 +33,9 @@ namespace PortfolioPerformance.Export.CSV.Test
             tagetFile = tagetFile + ".csv";
 
             var data = await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
-            PortfolioPerformanceExportCSV.Export(data, tagetFile);
             data.Securities.Sort((x, y) => x.Name.CompareTo(y.Name));
+            PortfolioPerformanceExportCSV.Export(data, tagetFile);
+            
 
             Assert.True(File.Exists(tagetFile));
 

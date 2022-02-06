@@ -3,7 +3,7 @@ using Xunit;
 
 namespace PortfolioPerformanceReaderTests
 {
-    public class PPReaderTestClass
+    public class PPReaderTest
     {
         const string localPPFile = @"";
 
