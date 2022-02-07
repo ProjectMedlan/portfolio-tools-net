@@ -12,27 +12,27 @@ namespace PortfolioPerformance.Service.DivvyDiary
 {
     // DateOnly is not yet supported
     // https://github.com/JamesNK/Newtonsoft.Json/issues/2521
-    // Not sure why this didn't work
-    //public class DateOnlyJsonConverter : JsonConverter<DateOnly>
-    //{
-    //    private const string DateFormat = "yyyy-MM-dd";
-
-    //    public override DateOnly ReadJson(JsonReader reader, Type objectType, DateOnly existingValue, bool hasExistingValue, JsonSerializer serializer)
-    //    {
-    //        return DateOnly.ParseExact((string)reader.Value, DateFormat, CultureInfo.InvariantCulture);
-    //    }
-
-    //    public override void WriteJson(JsonWriter writer, DateOnly value, JsonSerializer serializer)
-    //    {
-    //        writer.WriteValue(value.ToString(DateFormat, CultureInfo.InvariantCulture));
-    //    }
-    //}
-
-    public class DateOnlyFormatConverter : IsoDateTimeConverter
+    public class DateOnlyJsonConverter : JsonConverter<DateOnly>
     {
-        public DateOnlyFormatConverter(string format)
+        private const string DateFormat = "yyyy-MM-dd";
+
+        public override DateOnly ReadJson(JsonReader reader, Type objectType, DateOnly existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            DateTimeFormat = format;
+            return DateOnly.ParseExact((string)reader.Value, DateFormat, CultureInfo.InvariantCulture);
+        }
+
+        public override void WriteJson(JsonWriter writer, DateOnly value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value.ToString(DateFormat, CultureInfo.InvariantCulture));
         }
     }
+
+    // This doesn't work as is still returns DateTime
+    //public class DateOnlyFormatConverter : IsoDateTimeConverter
+    //{
+    //    public DateOnlyFormatConverter(string format)
+    //    {
+    //        DateTimeFormat = format;
+    //    }
+    //}
 }

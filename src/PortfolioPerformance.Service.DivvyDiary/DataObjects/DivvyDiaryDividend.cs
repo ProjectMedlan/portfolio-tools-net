@@ -9,13 +9,12 @@ namespace PortfolioPerformance.Service.DivvyDiary.DataObjects
 {
     public class DivvyDiaryDividend
     {
-        // [JsonConverter(typeof(DateOnlyJsonConverter))]
-        [JsonConverter(typeof(DateOnlyFormatConverter), "yyyy-MM-dd")]
-        public DateTime ExDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly ExDate { get; set; }
 
-        // [JsonConverter(typeof(DateOnlyJsonConverter))]
-        [JsonConverter(typeof(DateOnlyFormatConverter), "yyyy-MM-dd")]
-        public DateTime PayDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        // [JsonConverter(typeof(DateOnlyFormatConverter), "yyyy-MM-dd")]
+        public DateOnly PayDate { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
     }
