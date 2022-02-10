@@ -1,7 +1,6 @@
-﻿using PortfolioPerformanceReader;
-using Xunit;
+﻿using Xunit;
 
-namespace PortfolioPerformanceReaderTests
+namespace PortfolioPerformance.Reader.Test
 {
     public class PPReaderTest
     {
@@ -27,7 +26,7 @@ namespace PortfolioPerformanceReaderTests
         [InlineData(localPPFile)]
         public async void FileContainsSecurities(string file)
         {
-            PortfolioPerformance.DataObjects.PortfolioPerformanceData? data = await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
+            DataObjects.PortfolioPerformanceData? data = await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
             Assert.NotNull(data);
             Assert.NotNull(data.Securities);
             Assert.NotEmpty(data.Securities);

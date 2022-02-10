@@ -9,6 +9,7 @@ Currently nothing to install.
  * Check: Deserialize XML to complete object - benefits?
 
 ## Changelog
+ * 10.02.2022: Added: Sample Application
  * 06.02.2022: Added: DivvyDiaryService: Read latest dividens from DivvyDiaray
  * 30.01.2022: Fixed: Total shares have not been reduced for type sell only for type delivery outbound
  * 30.01.2022: Ádded: Setting to skip securitys with no shares when exporting to csv

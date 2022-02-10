@@ -4,7 +4,7 @@ using AngleSharp.Xml.Parser;
 using PortfolioPerformance.DataObjects;
 using System.Runtime.Serialization;
 
-namespace PortfolioPerformanceReader
+namespace PortfolioPerformance.Reader
 {
     public class PortfolioPerformanceDataReader
     {
@@ -34,7 +34,7 @@ namespace PortfolioPerformanceReader
             // Read all the data
             IElement rootElement = doc.QuerySelector("client");
 
-            Int32.TryParse(rootElement.QuerySelector("version").InnerHtml, out int fileVersion);
+            int.TryParse(rootElement.QuerySelector("version").InnerHtml, out int fileVersion);
             data.Version = fileVersion;
             data.BaseCurrency = rootElement.QuerySelector("baseCurrency").InnerHtml;
 
@@ -192,7 +192,7 @@ namespace PortfolioPerformanceReader
 
                 // We find the portfolio name above the transaction.
                 string portfolioName = "";
-                if ((parent.ParentElement != null) && (parent.ParentElement.ParentElement != null))
+                if (parent.ParentElement != null && parent.ParentElement.ParentElement != null)
                 {
                     portfolioName = parent.ParentElement.ParentElement.QuerySelector("name").InnerHtml;
                 }
@@ -218,11 +218,11 @@ namespace PortfolioPerformanceReader
                 }
 
                 // Sold? -> shares * (-1)
-                if ((transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_DELIVERY_OUTBOUND) || (transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_SELL))
+                if (transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_DELIVERY_OUTBOUND || transactionItem.QuerySelector("type").InnerHtml == TRANSACTION_TYPE_SELL)
                 {
                     AddLogMessage?.Invoke($"Lese Kauf/Verkauf: {itemID} - Es ist ein Verkauf!");
-                    shares *= (-1);
-                    amount *= (-1);
+                    shares *= -1;
+                    amount *= -1;
                 }
 
                 // Find Security in List
@@ -238,7 +238,7 @@ namespace PortfolioPerformanceReader
                     if (security.ShareDetails == null)
                         security.ShareDetails = new List<SecurityShareDetail>();
 
-                    security.ShareDetails.Add(new SecurityShareDetail { Date = (date.GetValueOrDefault(DateTime.MinValue)), Shares = shares, Portfolio = portfolioName, TotalValue = amount });
+                    security.ShareDetails.Add(new SecurityShareDetail { Date = date.GetValueOrDefault(DateTime.MinValue), Shares = shares, Portfolio = portfolioName, TotalValue = amount });
                 }
                 else
                 {

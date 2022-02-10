@@ -1,4 +1,4 @@
-using PortfolioPerformanceReader;
+using PortfolioPerformance.Reader;
 using System.Diagnostics;
 using System.IO;
 using Xunit;
