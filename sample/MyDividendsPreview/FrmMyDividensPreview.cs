@@ -18,28 +18,28 @@ namespace MyDividendsPreview
             string file = txtFilename.Text;
             if (!File.Exists(file))
             {
-                updateStatus("Datei existiert nicht");
+                UpdateStatus("Datei existiert nicht");
                 return;
             }
-            PortfolioPerformanceData portfolioData = await readPortfolioPerformanceData(file);
+            PortfolioPerformanceData portfolioData = await ReadPortfolioPerformanceData(file);
 
             // Read Dividens
-            Dictionary<String, DivvyDiaryDividend> dividends = await readDividens(portfolioData);
+            Dictionary<String, DivvyDiaryDividend> dividends = await ReadDividens(portfolioData);
 
             // Prepare results
-            List<DividendReportObject> reportData = prepareUserDividens(portfolioData, dividends);
+            List<DividendReportObject> reportData = PrepareUserDividens(portfolioData, dividends);
 
             // Show data
-            showReport(reportData);
+            ShowReport(reportData);
 
-            updateStatus("Fertig!");
+            UpdateStatus("Fertig!");
         }
 
-        private void updateStatus(string message)
+        private void UpdateStatus(string message)
         {
             if (lblStatus.InvokeRequired)
             {
-                this.Invoke(new Action<string>(updateStatus), message);
+                this.Invoke(new Action<string>(UpdateStatus), message);
                 return;
             }
 
@@ -47,19 +47,19 @@ namespace MyDividendsPreview
             Application.DoEvents();
         }
 
-        private async Task<PortfolioPerformanceData> readPortfolioPerformanceData(string file)
+        private async Task<PortfolioPerformanceData> ReadPortfolioPerformanceData(string file)
         {
-            updateStatus("Lese Datei ...");
+            UpdateStatus("Lese Datei ...");
             return await PortfolioPerformanceDataReader.ReadPortfolioPerformanceFile(file);
         }
 
-        private async Task<Dictionary<String, DivvyDiaryDividend>> readDividens(PortfolioPerformanceData portfolioData)
+        private async Task<Dictionary<String, DivvyDiaryDividend>> ReadDividens(PortfolioPerformanceData portfolioData)
         {
             Dictionary<String, DivvyDiaryDividend> resultList = new Dictionary<String, DivvyDiaryDividend>();
             DivvyDiaryService divvyService = new DivvyDiaryService();
             foreach (var item in portfolioData.Securities.Select(x => x.ISIN).Distinct())
             {
-                updateStatus($"Lese Dividende für {item}");
+                UpdateStatus($"Lese Dividende für {item}");
 
                 DivvyDiaryDividend result = await divvyService.GetCurrentDividendForShareWithDetails(item);
                 if (result != null)
@@ -71,9 +71,9 @@ namespace MyDividendsPreview
             return resultList;
         }
 
-        private List<DividendReportObject> prepareUserDividens(PortfolioPerformanceData portfolioData, Dictionary<String, DivvyDiaryDividend> dividends)
+        private List<DividendReportObject> PrepareUserDividens(PortfolioPerformanceData portfolioData, Dictionary<String, DivvyDiaryDividend> dividends)
         {
-            updateStatus($"Daten aufbereiten ...");
+            UpdateStatus($"Daten aufbereiten ...");
 
             // Loop through securitys. Check if there's a current dividen. Calc amount for ex date
             List<DividendReportObject> reportResult = new List<DividendReportObject>();
@@ -103,9 +103,9 @@ namespace MyDividendsPreview
             return reportResult;
         }
 
-        private void showReport(List<DividendReportObject> reportData)
+        private void ShowReport(List<DividendReportObject> reportData)
         {
-            updateStatus($"Daten anzeigen ...");
+            UpdateStatus($"Daten anzeigen ...");
             lvwDividends.Items.Clear();
             
             reportData.Sort((x,y) => x.PayDate.CompareTo(y.PayDate));
@@ -122,9 +122,5 @@ namespace MyDividendsPreview
                 lvwDividends.Items.Add(lvi);
             }
         }
-
-
-
-    
     }
 }
