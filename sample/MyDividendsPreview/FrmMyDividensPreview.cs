@@ -91,6 +91,8 @@ namespace MyDividendsPreview
                 // calc amount for ex date (ignore portfolio)
                 decimal totalShares = security.ShareDetails.FindAll(x => DateOnly.FromDateTime(x.Date.Date) <= dividenData.ExDate).Sum(x => x.Shares);
 
+                if (totalShares == 0) continue; // don't list sold securities
+
                 DividendReportObject result = new DividendReportObject();
                 result.Shares = totalShares / 1000 / 1000;
                 result.CurrencyCode = dividenData.Currency;
